@@ -18,26 +18,41 @@ jobs:
     outputs:
       run_mise: ${{ steps.decide.outputs.run_mise }}
     steps:
-      - name: Checkout
+      - name: Checkout default branch
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
-
-      - name: Detect relevant changes
-        id: changes
-        if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@3bd8738f79f560d4c3648f5d7f2dcf36c4ee3f0c # v3
         with:
-          filters: |
-            mise:
-              - system_files/etc/mise/config.toml
-              - .github/workflows/mise-install.yml
+          ref: main
+          path: main
+          fetch-depth: 0
+
+      - name: Checkout current branch
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
+        with:
+          path: pr
+          fetch-depth: 0
 
       - name: Decide execution
         id: decide
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "run_mise=${{ steps.changes.outputs.mise }}" >> "$GITHUB_OUTPUT"
-          else
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "run_mise=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          ALL_DIFFS=$(diff -rq --exclude='.git' main/ pr/ || true)
+
+          # Keep only changes relevant to mise validation.
+          MISE_DIFFS="$(echo "$ALL_DIFFS" | grep -E 'system_files/etc/mise/config.toml|\\.github/workflows/mise-install.yml' || true)"
+
+          if [[ -n "$MISE_DIFFS" ]]; then
+            echo "Relevant changes detected:"
+            echo "$MISE_DIFFS"
+            echo "run_mise=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No relevant changes detected."
+            echo "run_mise=false" >> "$GITHUB_OUTPUT"
           fi
 
   mise-install:
