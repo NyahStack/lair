@@ -33,11 +33,25 @@
       "matchUpdateTypes": ["pin", "pinDigest"]
     },
     {
-      "matchFileNames": [
-        "image-versions.yaml"
+      "matchPackageNames": [
+        "ghcr.io/nyahstack/*",
       ],
-      "groupName": "base-images",
+      "groupName": "images",
+      "matchUpdateTypes": [
+        "digest"
+      ],
       "automerge": true
+    },
+    {
+      "matchPackageNames": [
+        "ghcr.io/nyahstack/*",
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch"
+      ],
+      "enabled": false
     },
     {
       "matchDepTypes": ["action"],
