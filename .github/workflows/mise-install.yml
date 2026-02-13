@@ -19,14 +19,14 @@ jobs:
       run_mise: ${{ steps.decide.outputs.run_mise }}
     steps:
       - name: Checkout default branch
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: main
           path: main
           fetch-depth: 0
 
       - name: Checkout current branch
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           path: pr
           fetch-depth: 0
