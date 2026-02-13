@@ -56,6 +56,32 @@
     {
       "matchDepTypes": ["action"],
       "groupName": "github-actions"
+    },
+    {
+      "description": "Automerge non-major updates from mise-managed tool versions",
+      "matchFileNames": [
+        "system_files/etc/mise/config.toml",
+        "mise.devbox.toml"
+      ],
+      "matchUpdateTypes": [
+        "digest",
+        "pin",
+        "pinDigest",
+        "patch",
+        "minor"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Do not automerge major updates from mise-managed tool versions",
+      "matchFileNames": [
+        "system_files/etc/mise/config.toml",
+        "mise.devbox.toml"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false
     }
   ]
 }
