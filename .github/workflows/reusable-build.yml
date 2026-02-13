@@ -1,0 +1,193 @@
+name: reusable-build
+
+on:
+  workflow_call:
+    inputs:
+      fedora_version:
+        description: Fedora version to build (e.g. 42, 43)
+        required: true
+        type: string
+      image_variant:
+        description: Image variant to build (main, nvidia)
+        required: false
+        type: string
+        default: main
+
+env:
+  IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
+  SET_X: 1
+
+jobs:
+  check-build-required:
+    name: Check if build is required
+    runs-on: ubuntu-latest
+    outputs:
+      build_required: ${{ steps.check.outputs.build_required }}
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: main
+          path: main
+          fetch-depth: 0
+
+      - name: Checkout current branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          path: pr
+          fetch-depth: 0
+
+      - name: Compare digests to determine if build is required
+        id: check
+        shell: bash
+        env:
+          FEDORA_VERSION: ${{ inputs.fedora_version }}
+          IMAGE_VARIANT: ${{ inputs.image_variant }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            echo "Build triggered by workflow_dispatch - always building"
+            echo "build_required=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          BASE_NAME="fedora-toolbox-systemd-${IMAGE_VARIANT}-${FEDORA_VERSION}"
+
+          OLD_BASE_DIGEST=$(awk -v name="$BASE_NAME" '$1 == "-" && $2 == "name:" { in_item = ($3 == name); next } in_item && $1 == "digest:" { print $2; exit }' main/image-versions.yaml)
+          NEW_BASE_DIGEST=$(awk -v name="$BASE_NAME" '$1 == "-" && $2 == "name:" { in_item = ($3 == name); next } in_item && $1 == "digest:" { print $2; exit }' pr/image-versions.yaml)
+
+          echo "Comparing digests for ${BASE_NAME}:"
+          echo "old=${OLD_BASE_DIGEST:-<missing>}"
+          echo "new=${NEW_BASE_DIGEST:-<missing>}"
+
+          BUILD_REQUIRED=false
+
+          if [ -z "${OLD_BASE_DIGEST:-}" ] || [ -z "${NEW_BASE_DIGEST:-}" ]; then
+            echo "Unable to resolve one or more base digests; forcing build."
+            BUILD_REQUIRED=true
+          elif [ "$OLD_BASE_DIGEST" != "$NEW_BASE_DIGEST" ]; then
+            echo "Base digest changed."
+            BUILD_REQUIRED=true
+          fi
+
+          echo "Checking for changes outside image-versions.yaml..."
+          ALL_DIFFS=$(diff -rq --exclude='.git' main/ pr/ || true)
+
+          EXCLUDED_DIFF_PATTERNS=(
+            "Only in.*/image-versions.yaml"
+            "Files .*image-versions.yaml and .*image-versions.yaml differ"
+          )
+
+          FILTERED_DIFFS="$ALL_DIFFS"
+          for pattern in "${EXCLUDED_DIFF_PATTERNS[@]}"; do
+            FILTERED_DIFFS=$(echo "$FILTERED_DIFFS" | grep -Ev "$pattern" || true)
+          done
+
+          if [[ -n "$FILTERED_DIFFS" ]]; then
+            echo "Other files changed:"
+            echo "$FILTERED_DIFFS"
+            BUILD_REQUIRED=true
+          else
+            echo "No other files changed."
+          fi
+
+          echo "build_required=${BUILD_REQUIRED}" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ inputs.fedora_version }}-${{ inputs.image_variant }}
+    runs-on: ubuntu-24.04
+    needs: check-build-required
+    if: ${{ needs.check-build-required.outputs.build_required == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Mount BTRFS for podman storage
+        id: container-storage-action
+        uses: ublue-os/container-storage-action@dc1f4c8f17b672069e921f001132f7cf98a423a6
+        continue-on-error: true
+        with:
+          mount-opts: compress-force=zstd:2
+          loopback-free: '1'
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+
+      - name: Setup Just
+        uses: extractions/setup-just@e33e0265a09d6d736e2ee1e0eb685ef1de4669ff # v3
+
+      - name: Login To GHCR
+        if: github.event_name != 'pull_request'
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          just login-to-ghcr "$REGISTRY_USER" "$REGISTRY_TOKEN"
+
+      - name: Build image
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          just build-container \
+            "lair" \
+            "${{ inputs.fedora_version }}" \
+            "${{ inputs.image_variant }}" \
+            "${{ github.event_name }}"
+
+      # Workaround bug where capital letters in your GitHub username make it impossible to push to GHCR.
+      # https://github.com/macbre/push-to-ghcr/issues/12
+      - name: Lowercase registry
+        id: registry_case
+        uses: ASzc/change-string-case-action@d0603cd0a7dd490be678164909f65c7737470a7f # v6
+        with:
+          string: ${{ env.IMAGE_REGISTRY }}
+
+      - name: Push to GHCR
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          just push-to-registry \
+            "lair" \
+            "${{ inputs.fedora_version }}" \
+            "${{ inputs.image_variant }}" \
+            "${{ steps.registry_case.outputs.lowercase }}"
+
+      - name: Sign container image
+        if: github.event_name != 'pull_request'
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          just cosign-sign \
+            "lair" \
+            "${{ inputs.fedora_version }}" \
+            "${{ inputs.image_variant }}" \
+            "${{ steps.registry_case.outputs.lowercase }}"
+
+  check:
+    name: Check ${{ inputs.fedora_version }}-${{ inputs.image_variant }}
+    if: always()
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Check jobs
+        env:
+          JOBS: ${{ toJson(needs) }}
+        run: |
+          echo "Job status:"
+          echo "$JOBS" | jq -r 'to_entries[] | " - \(.key): \(.value.result)"'
+
+          for i in $(echo "$JOBS" | jq -r 'to_entries[] | .value.result'); do
+            if [ "$i" != "success" ] && [ "$i" != "skipped" ]; then
+              echo "Status check not okay!"
+              exit 1
+            fi
+          done

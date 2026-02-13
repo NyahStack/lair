@@ -1,0 +1,17 @@
+[Unit]
+Description=Create tools overlay
+ConditionVirtualization=container
+ConditionEnvironment=DISTROBOX_USER
+ConditionEnvironment=DISTROBOX_USER_HOME
+ConditionPathIsDirectory=/var/lib/tool-overlay
+After=local-fs.target
+
+[Service]
+Type=oneshot
+PassEnvironment=DISTROBOX_USER
+PassEnvironment=DISTROBOX_USER_HOME
+ExecStart=/usr/local/libexec/tool-overlay-setup
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

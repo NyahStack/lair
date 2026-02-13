@@ -1,0 +1,10 @@
+# local planning
+plan.local.md
+
+# signing material (never commit private keys)
+cosign.key
+cosign.key.*
+*.cosign.key
+*.pem
+*.p12
+*.pfx

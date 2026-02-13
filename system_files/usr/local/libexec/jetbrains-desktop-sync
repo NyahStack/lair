@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+: "${DISTROBOX_HOST_HOME:?DISTROBOX_HOST_HOME is required}"
+: "${DISTROBOX_USER:?DISTROBOX_USER is required}"
+: "${DISTROBOX_USER_HOME:?DISTROBOX_USER_HOME is required}"
+
+CONTAINER_NAME="${DISTROBOX_CONTAINER_ID:-devbox}"
+
+# The distrobox user is mapped to the host user's id
+USER_UID=$(id -ru "${DISTROBOX_USER}")
+USER_GID=$(id -rg "${DISTROBOX_USER}")
+
+SRC_DIR="${DISTROBOX_USER_HOME}/.local/share/applications"
+DEST_DIR="${DISTROBOX_HOST_HOME}/.local/share/applications"
+PREFIX="${CONTAINER_NAME}-"
+DEVBOX_ENTER_BIN="${DISTROBOX_HOST_HOME}/.local/bin/devbox-enter"
+# Fallback to host distrobox-enter if wrapper is missing
+if [[ ! -x "${DEVBOX_ENTER_BIN}" ]]; then
+  DEVBOX_ENTER_BIN="/usr/bin/distrobox-enter"
+fi
+
+# Create target dir with correct ownership/permissions in one step
+install -d -m 0755 -o "${USER_UID}" -g "${USER_GID}" "${DEST_DIR}"
+
+wrap_exec() {
+  local raw="$1"
+  if [[ "$raw" != *".local/share/JetBrains/Toolbox"* ]]; then
+    return 1
+  fi
+  local escaped=${raw//\'/\'\"\'\"\'} # escape single quotes for bash -lc
+  printf '%s -n %s -- bash -lc '\''%s'\''' "${DEVBOX_ENTER_BIN}" "$CONTAINER_NAME" "$escaped"
+}
+
+# Sync JetBrains desktop files from container to host
+for src in "${SRC_DIR}"/*.desktop; do
+  [[ -f "$src" ]] || continue
+  exec_line=$(grep -m1 '^Exec=' "$src" || true)
+  [[ -n "$exec_line" ]] || continue
+  exec_value=${exec_line#Exec=}
+
+  icon_line=$(grep -m1 '^Icon=' "$src" || true)
+  [[ -n "$icon_line" ]] || continue
+  icon_value=${icon_line#Icon=}
+  # Only proceed when the desktop file defines an icon and the referenced file exists
+  if [[ "${icon_value}" == /* ]]; then
+    [[ -f "${icon_value}" ]] || continue
+  else
+    continue
+  fi
+
+  wrapped_exec=$(wrap_exec "$exec_value") || continue
+
+  base=$(basename "$src")
+  dest="${DEST_DIR}/${PREFIX}${base}"
+
+  # If the host already has a generated entry, keep it intact instead of rewriting
+  if [[ -f "$dest" ]]; then
+    continue
+  fi
+
+  tmp_file="$(mktemp "${DEST_DIR}/.jbXXXXXX")"
+  {
+    echo "# Generated from ${src} to launch inside container ${CONTAINER_NAME}"
+    while IFS= read -r line; do
+      if [[ "$line" == Exec=* ]]; then
+        echo "Exec=${wrapped_exec}"
+      else
+        echo "$line"
+      fi
+    done < "$src"
+  } > "$tmp_file"
+  install -m 0644 -o "${USER_UID}" -g "${USER_GID}" "$tmp_file" "$dest"
+  rm -f "$tmp_file"
+done
+
+# Prune host entries that no longer have a source inside the container
+for dest in "${DEST_DIR}/${PREFIX}"*.desktop; do
+  [[ -f "$dest" ]] || continue
+
+  # Only handle files that look like ones we generated for JetBrains Toolbox
+  dest_exec=$(grep -m1 '^Exec=' "$dest" || true)
+  [[ "$dest_exec" == *"JetBrains/Toolbox"* ]] || continue
+
+  base=$(basename "$dest")
+  src="${SRC_DIR}/${base#${PREFIX}}"
+  if [[ ! -f "$src" ]]; then
+    rm -f -- "$dest"
+  fi
+done

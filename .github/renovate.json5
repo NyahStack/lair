@@ -1,0 +1,47 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices",
+    ":semanticCommits",
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update version strings in mise config.toml",
+      "managerFilePatterns": [
+        "/(^|/)\\.?mise\\.toml$/",
+        "/(^|/)\\.?mise/config\\.toml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+)(?: depName=(?<depName>[\\w@./-]+))?(?: packageName=(?<packageName>[\\w@./-]+))?(?: versioning=(?<versioning>[a-z-]+))?\\s*[\\r\\n]+(?<varName>[^\\s=]+)\\s*=\\s*\"(?<currentValue>[^\"]+)\""
+      ]
+    },
+    {
+      "customType": "regex",
+      "description": "Update GitHub Desktop RPM URL in devbox packages",
+      "managerFilePatterns": [
+        "/(^|/)build_files/devbox\\.packages$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>[\\w@./-]+)(?: versioning=(?<versioning>[a-z-]+))?\\s*[\\r\\n]+https://github\\.com/shiftkey/desktop/releases/download/(?<currentValue>release-[^/]+)/GitHubDesktop-linux-x86_64-[^/]+\\.rpm"
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "automerge": true,
+      "matchUpdateTypes": ["pin", "pinDigest"]
+    },
+    {
+      "matchFileNames": [
+        "image-versions.yaml"
+      ],
+      "groupName": "base-images",
+      "automerge": true
+    },
+    {
+      "matchDepTypes": ["action"],
+      "groupName": "github-actions"
+    }
+  ]
+}

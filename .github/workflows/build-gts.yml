@@ -1,0 +1,25 @@
+name: build gts
+
+on:
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build
+    uses: ./.github/workflows/reusable-build.yml
+    secrets: inherit
+    strategy:
+      fail-fast: false
+      matrix:
+        image_variant:
+          - main
+          - nvidia
+    with:
+      fedora_version: "42"
+      image_variant: ${{ matrix.image_variant }}
