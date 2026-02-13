@@ -14,7 +14,7 @@ java = [
   "temurin-25.0.2+10.0.LTS",
   "zulu-24.30.11.0"
 ]
-node = "24.11.1"
+node = "24.13.1"
 # renovate: datasource=npm depName=npm
 npm = "11.6.3"
 pnpm = "10.23.0"
