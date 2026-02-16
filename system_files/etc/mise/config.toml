@@ -20,7 +20,7 @@ npm = "11.10.0"
 pnpm = "10.29.3"
 # renovate: datasource=github-tags depName=slsa-framework/slsa-verifier versioning=semver
 slsa-verifier = "2.7.1"
-usage = "2.16.2"
+usage = "2.17.0"
 "aqua:yarnpkg/berry" = "4.11.0"
 rust = "1.93.1"
 # renovate: datasource=npm depName=@openai/codex
