@@ -24,7 +24,7 @@ usage = "2.18.0"
 "aqua:yarnpkg/berry" = "4.11.0"
 rust = "1.93.1"
 # renovate: datasource=npm depName=@openai/codex
-codex = "0.103.0"
+codex = "0.104.0"
 jq = "1.8.1"
 eza = "0.22.0"
 awscli = "2.33.27"
