@@ -28,7 +28,7 @@ codex = "0.114.0"
 jq = "1.8.1"
 eza = "0.22.0"
 awscli = "2.34.12"
-kubectl = "1.35.2"
+kubectl = "1.35.3"
 terraform = "1.14.7"
 
 [hooks]
