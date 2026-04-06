@@ -40,14 +40,22 @@ for src in "${SRC_DIR}"/*.desktop; do
   exec_value=${exec_line#Exec=}
 
   icon_line=$(grep -m1 '^Icon=' "$src" || true)
-  [[ -n "$icon_line" ]] || continue
-  icon_value=${icon_line#Icon=}
-  # Only proceed when the desktop file defines an icon and the referenced file exists
-  if [[ "${icon_value}" == /* ]]; then
-    [[ -f "${icon_value}" ]] || continue
-  else
-    continue
+  x_icon_path_line=$(grep -m1 '^X-Icon-Path=' "$src" || true)
+  host_icon_value=""
+  if [[ -n "$icon_line" ]]; then
+    icon_value=${icon_line#Icon=}
+    if [[ "${icon_value}" == /* ]] && [[ -f "${icon_value}" ]]; then
+      host_icon_value="${icon_value}"
+    fi
   fi
+  if [[ -z "${host_icon_value}" && -n "$x_icon_path_line" ]]; then
+    x_icon_path_value=${x_icon_path_line#X-Icon-Path=}
+    if [[ -f "${x_icon_path_value}" ]]; then
+      host_icon_value="${x_icon_path_value}"
+    fi
+  fi
+  # Prefer a concrete icon path the host can load directly. Skip files with no usable icon.
+  [[ -n "${host_icon_value}" ]] || continue
 
   wrapped_exec=$(wrap_exec "$exec_value") || continue
 
@@ -65,6 +73,8 @@ for src in "${SRC_DIR}"/*.desktop; do
     while IFS= read -r line; do
       if [[ "$line" == Exec=* ]]; then
         echo "Exec=${wrapped_exec}"
+      elif [[ "$line" == Icon=* ]]; then
+        echo "Icon=${host_icon_value}"
       else
         echo "$line"
       fi
