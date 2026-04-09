@@ -27,7 +27,7 @@ rust = "1.94.1"
 codex = "0.118.0"
 jq = "1.8.1"
 eza = "0.22.0"
-awscli = "2.34.27"
+awscli = "2.34.28"
 kubectl = "1.35.3"
 terraform = "1.14.8"
 
