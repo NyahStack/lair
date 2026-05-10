@@ -6,12 +6,12 @@ images:
   - name: fedora-toolbox-systemd-main-43
     image: ghcr.io/nyahstack/fedora-toolbox-systemd-main
     tag: 43
-    digest: sha256:9fade782437ddb4ab444faac3b7530821f20138c964c40d12360e3c1e51f71e9
+    digest: sha256:5fd963d045e07a7aa7fe56df8bd64c94267ea7bde7e60413f54931e3d80e13cc
   - name: fedora-toolbox-systemd-nvidia-42
     image: ghcr.io/nyahstack/fedora-toolbox-systemd-nvidia
     tag: 42
-    digest: sha256:6f36f4f085f2a429ccc55667ff4208b81546c27046774f4dc13bde9bdd817d81
+    digest: sha256:66ab5c2f4a2e59aad3aa9051ea190f650a99869ed0e1b4db81f1e00b567def4f
   - name: fedora-toolbox-systemd-nvidia-43
     image: ghcr.io/nyahstack/fedora-toolbox-systemd-nvidia
     tag: 43
-    digest: sha256:f91f685c01daa285d49d052decc36528665f2bdcd4c9f0fdd1b5c1a0e8641167
+    digest: sha256:4211125df56e4a23e468d8a96a7d7a99068bdcbf8adf95946c3dbdef059e9cd5
