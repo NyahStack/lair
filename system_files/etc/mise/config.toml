@@ -22,7 +22,7 @@ pnpm = "11.3.0"
 slsa-verifier = "2.7.1"
 usage = "3.3.0"
 "aqua:yarnpkg/berry" = "4.11.0"
-rust = "1.95.0"
+rust = "1.96.0"
 # renovate: datasource=npm depName=@openai/codex
 codex = "0.133.0"
 jq = "1.8.1"
