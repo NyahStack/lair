@@ -17,7 +17,7 @@ java = [
 node = "24.18.0"
 # renovate: datasource=npm depName=npm
 npm = "11.17.0"
-pnpm = "11.8.0"
+pnpm = "11.9.0"
 # renovate: datasource=github-tags depName=slsa-framework/slsa-verifier versioning=semver
 slsa-verifier = "2.7.1"
 usage = "3.5.3"
