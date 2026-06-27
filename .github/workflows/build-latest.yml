@@ -19,7 +19,6 @@ jobs:
       matrix:
         image_variant:
           - main
-          - nvidia
     with:
-      fedora_version: "43"
+      fedora_version: "44"
       image_variant: ${{ matrix.image_variant }}

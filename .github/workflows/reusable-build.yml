@@ -4,11 +4,11 @@ on:
   workflow_call:
     inputs:
       fedora_version:
-        description: Fedora version to build (e.g. 42, 43)
+        description: Fedora version to build (e.g. 43, 44)
         required: true
         type: string
       image_variant:
-        description: Image variant to build (main, nvidia)
+        description: Image variant to build (main)
         required: false
         type: string
         default: main
