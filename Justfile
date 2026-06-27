@@ -2,10 +2,10 @@ set unstable := true
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
 # Tags
-gts := "42"
-latest := "43"
+gts := "43"
+latest := "44"
 [private]
-beta := "44"
+beta := "45"
 
 # Defaults
 default_version := latest
@@ -29,7 +29,6 @@ image-file := justfile_dir() / "image-versions.yaml"
 [private]
 images := '(
   ["lair"]="fedora-toolbox-systemd-main"
-  ["lair-nvidia"]="fedora-toolbox-systemd-nvidia"
 )'
 
 # Fedora Versions
@@ -47,18 +46,17 @@ fedora_versions := '(
 [private]
 variants := '(
   ["main"]="main"
-  ["nvidia"]="nvidia"
 )'
 
 # Helpers
 [private]
-SUDO_DISPLAY := env("DISPLAY", "") || env("WAYLAND_DISPLAY", "")
+SUDO_DISPLAY := if env("DISPLAY", "") != "" { env("DISPLAY", "") } else { env("WAYLAND_DISPLAY", "") }
 [private]
-SUDOIF := if `id -u` == "0" { "" } else if SUDO_DISPLAY != "" { which("sudo") + " --askpass" } else { which("sudo") }
+SUDOIF := if `id -u` == "0" { "" } else if SUDO_DISPLAY != "" { "sudo --askpass" } else { "sudo" }
 [private]
 just := just_executable()
 [private]
-PODMAN := which("podman") || require("podman-remote")
+PODMAN := env("PODMAN", "podman")
 
 # Make things quieter by default
 [private]
@@ -133,7 +131,7 @@ image-name-check $image_name $fedora_version $variant:
 
   {{ default-inputs }}
 
-  if [[ "$image_name" =~ -main$|-nvidia$ ]]; then
+  if [[ "$image_name" =~ -main$ ]]; then
     image_name="${image_name%-*}"
   fi
 
@@ -200,7 +198,7 @@ fix:
 
 [group("Utility")]
 list-base-images:
-  @awk '$1 == "-" && $2 == "name:" { name = $3; next } $1 == "image:" { image = $2; next } $1 == "tag:" { tag = $2; gsub(/"/, "", tag); next } $1 == "digest:" { digest = $2; if (name ~ /^fedora-toolbox-systemd-(main|nvidia)-(42|43)$/) printf "%s: %s:%s@%s\n", name, image, tag, digest }' {{ image-file }}
+  @awk '$1 == "-" && $2 == "name:" { name = $3; next } $1 == "image:" { image = $2; next } $1 == "tag:" { tag = $2; gsub(/"/, "", tag); next } $1 == "digest:" { digest = $2; if (name ~ /^fedora-toolbox-systemd-main-(43|44)$/) printf "%s: %s:%s@%s\n", name, image, tag, digest }' {{ image-file }}
 
 [group("Utility")]
 gen-tags image_name="" fedora_version="" variant="" github="":
@@ -229,10 +227,6 @@ gen-tags image_name="" fedora_version="" variant="" github="":
   else
     base_tag="gts"
   fi
-  if [[ "$variant" == "nvidia" ]]; then
-    base_tag="$base_tag-nvidia"
-  fi
-
   if jq -e --arg tag "$fedora_version-$TIMESTAMP" 'any((.Tags // [])[]; contains($tag))' "$LIST_TAGS" >/dev/null; then
     POINT=1
     while jq -e --arg tag "$base_tag-$TIMESTAMP.$POINT" 'any((.Tags // [])[]; contains($tag))' "$LIST_TAGS" >/dev/null; do

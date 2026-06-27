@@ -22,7 +22,7 @@ Fedora-based distrobox/toolbox image with JetBrains Toolbox helpers, user overla
 ## Local Build Tasks
 - List recipes: `just --list`
 - Show pinned bases: `just list-base-images`
-- Generate tags: `just gen-tags devbox 43 main` or `just gen-tags devbox 42 nvidia`
-- Build image: `just build devbox 43 main` or `just build devbox 42 nvidia`
-- Push image: `just push devbox 43 main` or `just push devbox 42 nvidia`
-- Sign pushed tags: `just sign devbox 43 main` or `just sign devbox 42 nvidia`
+- Generate tags: `just gen-tags devbox 44 main`
+- Build image: `just build devbox 44 main`
+- Push image: `just push devbox 44 main`
+- Sign pushed tags: `just sign devbox 44 main`

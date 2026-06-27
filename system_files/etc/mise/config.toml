@@ -14,22 +14,22 @@ java = [
   "temurin-25.0.3+9.0.LTS",
   "zulu-24.30.11.0"
 ]
-node = "24.16.0"
+node = "24.18.0"
 # renovate: datasource=npm depName=npm
 npm = "11.17.0"
-pnpm = "11.6.0"
+pnpm = "11.8.0"
 # renovate: datasource=github-tags depName=slsa-framework/slsa-verifier versioning=semver
 slsa-verifier = "2.7.1"
-usage = "3.5.0"
+usage = "3.5.3"
 "aqua:yarnpkg/berry" = "4.11.0"
 rust = "1.96.0"
 # renovate: datasource=npm depName=@openai/codex
-codex = "0.139.0"
-jq = "1.8.1"
+codex = "0.142.0"
+jq = "1.8.2"
 eza = "0.23.4"
-awscli = "2.35.5"
+awscli = "2.35.11"
 kubectl = "1.36.2"
-terraform = "1.15.6"
+terraform = "1.15.7"
 
 [hooks]
 postinstall = '''
