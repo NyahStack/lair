@@ -19,14 +19,14 @@ jobs:
       run_mise: ${{ steps.decide.outputs.run_mise }}
     steps:
       - name: Checkout default branch
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: main
           path: main
           fetch-depth: 0
 
       - name: Checkout current branch
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           path: pr
           fetch-depth: 0
@@ -64,10 +64,10 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up mise
-        uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4
+        uses: jdx/mise-action@f10502fc09dadecfefb962fff68ce77213930204 # v4
         with:
           cache: true
 
