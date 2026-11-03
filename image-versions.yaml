@@ -6,8 +6,8 @@ images:
   - name: fedora-toolbox-systemd-main-43
     image: ghcr.io/nyahstack/fedora-toolbox-systemd-main
     tag: 43
-    digest: sha256:679a7f64bca0a9f6d2a9e68d2fa88d8eeec6d3381daff003d20d67fdf87e6bbe
+    digest: sha256:ec43c9d21b37c95f86822d07bf5858c86a46bfd66337612007fee2d01d88f1c7
   - name: fedora-toolbox-systemd-main-44
     image: ghcr.io/nyahstack/fedora-toolbox-systemd-main
     tag: 44
-    digest: sha256:f8e5b41214c05ab5aa07cde345a35e9a56b120dd54645e9ae8c0d8e997c87ba1
+    digest: sha256:4bb764d16673a0021d745f549056d4ba51da47ad70612c68e8c5a32c1aacdd71
